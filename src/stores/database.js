@@ -1,11 +1,11 @@
 import {
-	addDoc,
 	collection,
 	deleteDoc,
 	doc,
 	getDoc,
 	getDocs,
 	query,
+	setDoc,
 	updateDoc,
 	where,
 } from "firebase/firestore/lite";
@@ -22,6 +22,23 @@ export const useDatabaseStore = defineStore("database", {
 		loading: false,
 	}),
 	actions: {
+		async getURL(id) {
+			try {
+				const docRef = doc(db, "urls", id);
+				const docSpan = await getDoc(docRef);
+
+				if (!docSpan.exists()) {
+					return false;
+				}
+
+				return docSpan.data().name;
+			} catch (error) {
+				console.log(error.message);
+				return false;
+			} finally {
+			}
+		},
+
 		async getUrls() {
 			if (this.documents.length !== 0) {
 				return;
@@ -47,6 +64,7 @@ export const useDatabaseStore = defineStore("database", {
 				this.loadingDoc = false;
 			}
 		},
+
 		async addUrl(name) {
 			this.loading = true;
 			try {
@@ -55,11 +73,11 @@ export const useDatabaseStore = defineStore("database", {
 					short: nanoid(6),
 					user: auth.currentUser.uid,
 				};
-				const docRef = await addDoc(collection(db, "urls"), objetoDoc);
+				await setDoc(doc(db, "urls", objetoDoc.short), objetoDoc);
 				// console.log(docRef.id);
 				this.documents.push({
 					...objetoDoc,
-					id: docRef.id,
+					id: objetoDoc.short,
 				});
 			} catch (error) {
 				console.log(error.code);
@@ -68,6 +86,7 @@ export const useDatabaseStore = defineStore("database", {
 				this.loading = false;
 			}
 		},
+
 		async leerUrl(id) {
 			try {
 				const docRef = doc(db, "urls", id);
@@ -87,6 +106,7 @@ export const useDatabaseStore = defineStore("database", {
 			} finally {
 			}
 		},
+
 		async updateUrl(id, name) {
 			this.loading = true;
 			try {
@@ -116,6 +136,7 @@ export const useDatabaseStore = defineStore("database", {
 				this.loading = false;
 			}
 		},
+
 		async deleteUrl(id) {
 			this.loading = true;
 			try {
